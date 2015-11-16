@@ -18,14 +18,18 @@ current_chapter = ''
 storys = engine.getStoryList()
 
 prefix_dict = {
-	' ': '',
+	'~': '',
 	':': '-',
 	'>': '>',
 	}
 
 def insert_2_gamefile(msg, mode=':'):
+	global prefix_dict, story_file_suffix
 	f = sublime.active_window().open_file('my_story'+story_file_suffix)
 	content = ''
+	print 'mode:' + mode+'|'
+	print prefix_dict.get(mode)
+	print prefix_dict.keys()
 	for line in msg.split('\n'):
 		content += str(prefix_dict.get(mode)) + line + '\n'
 	print content
@@ -37,10 +41,10 @@ def insert_2_gamefile(msg, mode=':'):
 	f.show_at_center(f.size())
 
 def show_chapter(chapter):
-	insert_2_gamefile(chapter, ' ')
+	insert_2_gamefile(chapter, '~')
 
 def show_tips_info(info):
-	insert_2_gamefile(info, '> ')
+	insert_2_gamefile(info, '>')
 
 def show_options(options, function, switch=True):
 	global all_options_num
@@ -49,8 +53,10 @@ def show_options(options, function, switch=True):
 
 
 def save():
-	engine.save()
-	show_tips_info('Save succeed!')
+	if engine.save():
+		show_tips_info('Save Succeed!')
+	else:
+		show_tips_info('Save Failed!')
 	return 0
 
 functions['save'] = save
@@ -73,14 +79,16 @@ def load():
 functions['load'] = load
 
 def help():
+	global helpinfo
 	show_tips_info(helpinfo)
 	return 0
 
 functions['help'] = help
 
 def exit_game():
-	exit(0)
-	
+	# exit()
+	pass
+
 functions['exit'] = exit_game
 
 
@@ -90,7 +98,8 @@ def input_handle(num):
 	print all_options_num, func_point
 	functions_num = len(functions)
 	if func_point < functions_num:
-		choose = functions[functions.keys(functions_num - func_point + 1)]()
+		# print functions[functions.keys()[functions_num - func_point]]
+		choose = functions[functions.keys()[functions_num - func_point]]()
 	else:
 		choose = num+1
 	print 'choose' + str(choose)
@@ -112,7 +121,9 @@ def visit_chapter_E(num):
 	global current_chapter
 	num = input_handle(num)
 	if num > 0:
-		chapter = engine.chooseChapter(num-1)
+		current_chapter = engine.chooseChapter(num-1)
+		visit_chapter(current_chapter)
+	else :
 		visit_chapter(current_chapter)
 	
 def visit_chapter(chapter):
@@ -128,14 +139,14 @@ def visit_story(story):
 	visit_chapter(startFlag)
 
 def startGame():
-	global storys, current_story, current_chapter
-	if current_story:
+	global storys, current_story, current_chapter, endFlag
+	if current_story and current_chapter is not endFlag:
 		if current_chapter:
 			visit_chapter(current_chapter)
 		else:
 			visit_story(current_story)
 	else:
-		show_tips_info('start game: input \'help\' get help infomation')
+		show_tips_info('start game: '+ stools.getNowTime_Str() + '\n')
 		show_options(storys, choose_story_E)	
 
 class StartStoFloGameCommand(sublime_plugin.TextCommand):
