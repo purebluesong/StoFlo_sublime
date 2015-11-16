@@ -3,17 +3,14 @@ import sublime, sublime_plugin
 import engine, stools
 # 一个插件150行……我是人民的罪人
 
-helpinfo = u'''帮助信息：
-输入S保存进度
-输入L载入进度
-'''
+helpinfo = u'''帮助信息：请联系Sprout'''
 endFlag = 'end'
 startFlag = 'start'
 story_file_suffix = '.sfs'
 functions = {}
 all_options_num = 0
-current_story = ''
-current_chapter = ''
+story_on = ''
+chapter_on = startFlag
 
 storys = engine.getStoryList()
 
@@ -51,7 +48,6 @@ def show_options(options, function, switch=True):
 	all_options_num = len(options + functions.keys())
 	sublime.active_window().show_quick_panel(options+functions.keys() if switch else options, function)
 
-
 def save():
 	if engine.save():
 		show_tips_info('Save Succeed!')
@@ -62,17 +58,17 @@ def save():
 functions['save'] = save
 
 def load_E(choose):
-	global current_chapter
-	current_chapter = engine.load(choose)
-	show_chapter(engine.getChapterContent(current_chapter))
-	show_options(engine.getNextChapters(current_chapter), visit_chapter_E)
+	global chapter_on
+	chapter_on = engine.load(choose)
+	show_chapter(engine.getChapterContent(chapter_on))
+	show_options(engine.getNextChapters(chapter_on), visit_chapter_E)
 
 def load():
-	global current_chapter
+	global chapter_on
 	saves = engine.get_saves()
 	options = []
 	for save in saves:
-		options += [str(save[0])+'\t' + save[1] + '\t' + save[2]]
+		options += [save[1] + '-----\t' + save[2]]
 	show_options(options, load_E, False)
 	return -1
 
@@ -97,8 +93,7 @@ def input_handle(num):
 	func_point = all_options_num-num
 	print all_options_num, func_point
 	functions_num = len(functions)
-	if func_point < functions_num:
-		# print functions[functions.keys()[functions_num - func_point]]
+	if func_point <= functions_num:
 		choose = functions[functions.keys()[functions_num - func_point]]()
 	else:
 		choose = num+1
@@ -106,26 +101,27 @@ def input_handle(num):
 	return choose
 
 def choose_story_E(num):
-	global current_story, current_chapter
+	global story_on, chapter_on
 	num = input_handle(num)
 	if num > 0:
 		print 'num' + str(num)
-		current_story = storys[num-1]
-		engine.chooseStory(current_story)
-		print current_story + 'start'
-		visit_story(current_story)
+		story_on = storys[num-1]
+		engine.chooseStory(story_on)
+		print story_on + 'start'
+		visit_story(story_on)
 	elif num == 0:
 		show_options(storys, choose_story_E)
 
 def visit_chapter_E(num):
-	global current_chapter
+	global chapter_on
 	num = input_handle(num)
 	if num > 0:
-		current_chapter = engine.chooseChapter(num-1)
-		visit_chapter(current_chapter)
-	else :
-		visit_chapter(current_chapter)
-	
+		chapter_on = engine.chooseChapter(num-1)
+		visit_chapter(chapter_on)
+	elif num == 0:
+		visit_chapter(engine.current_chapter)
+	else:
+		pass
 def visit_chapter(chapter):
 	global endFlag
 	print 'visit_chapter:'+chapter
@@ -139,12 +135,12 @@ def visit_story(story):
 	visit_chapter(startFlag)
 
 def startGame():
-	global storys, current_story, current_chapter, endFlag
-	if current_story and current_chapter is not endFlag:
-		if current_chapter:
-			visit_chapter(current_chapter)
+	global storys, story_on, chapter_on, endFlag
+	if story_on and chapter_on is not endFlag:
+		if chapter_on:
+			visit_chapter(chapter_on)
 		else:
-			visit_story(current_story)
+			visit_story(story_on)
 	else:
 		show_tips_info('start game: '+ stools.getNowTime_Str() + '\n')
 		show_options(storys, choose_story_E)	

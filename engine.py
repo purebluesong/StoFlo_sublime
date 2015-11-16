@@ -46,13 +46,13 @@ def save(name='default', timestramp=True):
     global current_chapter
     try:
         f = open(name + save_suffix, 'a+')
-        f.write(current_chapter+(split_symbol+str(stools.getNowTime_Int)) if timestramp else '')
+        f.write(current_chapter+(split_symbol+str(stools.getNowTime_Int())) if timestramp else '')
         f.close()
     except Exception, e:
-        raise
-        return True
-    else:
+        raise e
         return False
+    else:
+        return True
 
 def get_saves(name='default'):
     saves = []
@@ -72,7 +72,7 @@ def get_saves(name='default'):
             i += 1
     except Exception, e:
         make_error('error:Maybe the file does not exit')
-        raise e
+        # raise e
         return saves
     else:
         return saves
